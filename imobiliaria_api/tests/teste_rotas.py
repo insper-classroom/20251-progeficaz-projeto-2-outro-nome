@@ -117,6 +117,80 @@ def test_deletar_imovel(mock_session, mock_query, client):
     # Verificações da resposta
     assert response.status_code == 204
 
+@patch('app.routes.Imovel.query')
+def test_listar_imoveis_por_tipo(mock_query, client):
+    # Criar mocks de imóveis
+    mock_imovel1 = MagicMock()
+    mock_imovel1.to_dict.return_value = {
+        'id': 1,
+        'logradouro': 'Rua A',
+        'cidade': 'São Paulo',
+        'tipo': 'casa',
+        'valor': 600000.0
+    }
     
+    mock_imovel2 = MagicMock()
+    mock_imovel2.to_dict.return_value = {
+        'id': 3,
+        'logradouro': 'Rua C',
+        'cidade': 'Rio de Janeiro',
+        'tipo': 'casa',
+        'valor': 700000.0
+    }
+    
+    # Configurar mock para simular a consulta filtrada
+    mock_filter = MagicMock()
+    mock_query.filter_by.return_value = mock_filter
+    mock_filter.all.return_value = [mock_imovel1, mock_imovel2]
+    
+    # Fazer a requisição GET
+    response = client.get('/api/imoveis/tipo/casa')
+    data = json.loads(response.data)
+    
+    # Verificar se a função filter_by foi chamada com o tipo correto
+    mock_query.filter_by.assert_called_once_with(tipo='casa')
+    
+    # Verificações da resposta
+    assert response.status_code == 200
+    assert len(data) == 2
+    assert all(imovel['tipo'] == 'casa' for imovel in data)
+
+@patch('app.routes.Imovel.query')
+def test_listar_imoveis_por_cidade(mock_query, client):
+    # Criar mocks de imóveis
+    mock_imovel1 = MagicMock()
+    mock_imovel1.to_dict.return_value = {
+        'id': 1,
+        'logradouro': 'Rua A',
+        'cidade': 'São Paulo',
+        'tipo': 'casa',
+        'valor': 600000.0
+    }
+    
+    mock_imovel2 = MagicMock()
+    mock_imovel2.to_dict.return_value = {
+        'id': 2,
+        'logradouro': 'Rua B',
+        'cidade': 'São Paulo',
+        'tipo': 'apartamento',
+        'valor': 400000.0
+    }
+    
+    # Configurar mock para simular a consulta filtrada
+    mock_filter = MagicMock()
+    mock_query.filter_by.return_value = mock_filter
+    mock_filter.all.return_value = [mock_imovel1, mock_imovel2]
+    
+    # Fazer a requisição GET
+    response = client.get('/api/imoveis/cidade/São Paulo')
+    data = json.loads(response.data)
+    
+    # Verificar se a função filter_by foi chamada com a cidade correta
+    mock_query.filter_by.assert_called_once_with(cidade='São Paulo')
+    
+    # Verificações da resposta
+    assert response.status_code == 200
+    assert len(data) == 2
+    assert all(imovel['cidade'] == 'São Paulo' for imovel in data)
     
         
